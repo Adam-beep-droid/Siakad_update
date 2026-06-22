@@ -98,6 +98,12 @@
     @stack('styles')
 </head>
 <body>
+<div id="global-loading" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background:rgba(15,23,42,.55);z-index:9999;">
+    <div class="text-center text-white">
+        <div class="spinner-border text-light mb-3" role="status"></div>
+        <div class="fw-semibold">Memproses, mohon tunggu...</div>
+    </div>
+</div>
 
 @auth
 {{-- ======= SIDEBAR ======= --}}
@@ -107,7 +113,7 @@
         <small>Sistem Informasi Akademik</small>
     </div>
 
-    <div class="pt-2">
+    <div class="pt-2" style="padding-bottom:120px;overflow-y:auto;max-height:calc(100vh - 80px)">
         <p class="section-label">Menu Utama</p>
         <a href="{{ route('mahasiswa.index') }}" class="nav-link {{ request()->routeIs('mahasiswa.index') ? 'active' : '' }}">
             <i class="bi bi-people-fill"></i> Data Mahasiswa
@@ -127,6 +133,11 @@
             <i class="bi bi-filetype-json"></i> Export JSON
         </a>
 
+        <p class="section-label mt-2">Notifikasi</p>
+        <a href="{{ route('notifications.form') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
+            <i class="bi bi-envelope-paper"></i> Kirim Email
+        </a>
+
         <p class="section-label mt-2">Sistem</p>
         <a href="{{ route('logs.index') }}" class="nav-link {{ request()->routeIs('logs.*') ? 'active' : '' }}">
             <i class="bi bi-journal-text"></i> Activity Log
@@ -134,25 +145,35 @@
     </div>
 
     {{-- User info di bawah --}}
-    <div style="position: absolute; bottom: 0; width: 100%; padding: 1rem; border-top: 1px solid rgba(255,255,255,.1);">
-        <div class="d-flex align-items-center gap-2 mb-2">
-            <div class="rounded-circle bg-indigo-500 d-flex align-items-center justify-content-center"
-                 style="width:34px;height:34px;background:#6366f1;flex-shrink:0">
-                <i class="bi bi-person-fill text-white" style="font-size:.9rem"></i>
-            </div>
-            <div style="overflow:hidden">
-                <div style="color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                    {{ Auth::user()->name }}
+    <div style="position:absolute;bottom:0;width:100%;border-top:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.15);">
+        <div style="padding:.875rem 1.1rem .75rem;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#818cf8);box-shadow:0 2px 6px rgba(99,102,241,.45)">
+                    <i class="bi bi-person-fill text-white" style="font-size:1rem"></i>
                 </div>
-                <div style="color:#a5b4fc;font-size:.7rem">{{ Auth::user()->role }}</div>
+                <div style="overflow:hidden;flex:1">
+                    <div style="color:#fff;font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">
+                        {{ Auth::user()->name }}
+                    </div>
+                    <div style="color:#a5b4fc;font-size:.7rem;text-transform:capitalize;line-height:1.3">
+                        {{ Auth::user()->role }}
+                    </div>
+                </div>
             </div>
         </div>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="btn btn-sm w-100" style="background:rgba(255,255,255,.1);color:#c7d2fe;font-size:.78rem">
-                <i class="bi bi-box-arrow-right me-1"></i> Logout
-            </button>
-        </form>
+        <div style="padding:0 .875rem .875rem;">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit"
+                    style="width:100%;padding:.45rem;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:rgba(255,255,255,.08);color:#c7d2fe;font-size:.78rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.4rem;"
+                    onmouseover="this.style.background='rgba(255,255,255,.18)';this.style.color='#fff'"
+                    onmouseout="this.style.background='rgba(255,255,255,.08)';this.style.color='#c7d2fe'">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
     </div>
 </nav>
 
@@ -219,6 +240,12 @@
                 bsAlert.close();
             });
         }, 5000);
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function () {
+                document.getElementById('global-loading')?.classList.remove('d-none');
+            });
+        });
     });
 </script>
 

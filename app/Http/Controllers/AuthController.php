@@ -78,7 +78,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $name = Auth::user()?->name ?? 'Unknown';
-        ActivityLog::record('login', "User logout: {$name}");
+        ActivityLog::record('logout', "User logout: {$name}");
 
         Auth::logout();
         $request->session()->invalidate();

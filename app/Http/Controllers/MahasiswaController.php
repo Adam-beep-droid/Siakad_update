@@ -7,8 +7,10 @@ use App\Models\Mahasiswa;
 use App\Services\SearchService;
 use App\Services\SortService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Mail\NotifikasiMahasiswa;
 
 /**
  * Class MahasiswaController
@@ -444,6 +446,75 @@ class MahasiswaController extends Controller
             return back()->with('success', '✅ Komentar berhasil disimpan.');
         } catch (\Throwable $e) {
             return back()->with('error', '❌ Gagal menyimpan komentar: ' . $e->getMessage());
+        }
+    }
+
+    // =========================================================
+    //  SEND EMAIL TO STUDENTS
+    // =========================================================
+
+    public function sendEmailForm()
+    {
+        $mahasiswas = Mahasiswa::select('id', 'nim', 'nama', 'email', 'prodi')
+            ->orderBy('nama')
+            ->get();
+
+        return view('notifications.send', compact('mahasiswas'));
+    }
+
+    public function sendEmail(Request $request)
+    {
+        $request->validate([
+            'subject'    => 'required|string|max:255',
+            'message'    => 'required|string|max:10000',
+            'recipients' => 'required|array|min:1',
+            'recipients.*' => 'required|email',
+            'attachment' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar,txt',
+        ], [
+            'recipients.required' => 'Pilih minimal satu penerima email.',
+            'attachment.max'      => 'Ukuran file maksimal 10MB.',
+            'attachment.mimes'    => 'Format file tidak didukung.',
+        ]);
+
+        $attachmentData = null;
+        $attachmentName = null;
+        $attachmentMime = null;
+
+        if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
+            $file           = $request->file('attachment');
+            $attachmentName = $file->getClientOriginalName();
+            $attachmentMime = $file->getClientMimeType();
+            $attachmentData = file_get_contents($file->getRealPath());
+        }
+
+        try {
+            $sent = 0;
+            $recipients = $request->recipients;
+
+            foreach ($recipients as $email) {
+                $student = Mahasiswa::where('email', $email)->first();
+                $name = $student?->nama ?? 'Mahasiswa';
+
+                Mail::to($email)->send(new NotifikasiMahasiswa(
+                    $name,
+                    $request->subject,
+                    $request->message,
+                    $attachmentData,
+                    $attachmentName,
+                    $attachmentMime
+                ));
+
+                ActivityLog::record('email', "Email dikirim ke {$name} ({$email})", [
+                    'target'     => $email,
+                    'data_count' => Mahasiswa::count(),
+                ]);
+
+                $sent++;
+            }
+
+            return back()->with('success', "✅ Email berhasil dikirim ke <strong>{$sent}</strong> penerima.");
+        } catch (\Throwable $e) {
+            return back()->with('error', '❌ Gagal mengirim email: ' . $e->getMessage());
         }
     }
 

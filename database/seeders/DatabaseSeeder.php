@@ -16,19 +16,23 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ---- Admin User ----
-        User::create([
-            'name'     => 'Administrator',
-            'email'    => 'admin@siakad.ac.id',
-            'password' => Hash::make('password'),
-            'role'     => 'admin',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@siakad.ac.id'],
+            [
+                'name'     => 'Administrator',
+                'password' => Hash::make('password'),
+                'role'     => 'admin',
+            ]
+        );
 
-        User::create([
-            'name'     => 'Operator BAAK',
-            'email'    => 'operator@siakad.ac.id',
-            'password' => Hash::make('password'),
-            'role'     => 'operator',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'operator@siakad.ac.id'],
+            [
+                'name'     => 'Operator BAAK',
+                'password' => Hash::make('password'),
+                'role'     => 'operator',
+            ]
+        );
 
         // ---- Data Mahasiswa Dummy ----
         $mahasiswas = [
@@ -55,9 +59,12 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($mahasiswas as $data) {
-            Mahasiswa::create(array_merge($data, [
-                'tanggal_lahir' => now()->subYears(rand(19, 25))->subDays(rand(0, 365))->format('Y-m-d'),
-            ]));
+            Mahasiswa::updateOrCreate(
+                ['nim' => $data['nim']],
+                array_merge($data, [
+                    'tanggal_lahir' => now()->subYears(rand(19, 25))->subDays(rand(0, 365))->format('Y-m-d'),
+                ])
+            );
         }
     }
 }

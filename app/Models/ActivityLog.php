@@ -51,7 +51,9 @@ class ActivityLog extends Model
             'search' => 'info',
             'import' => 'primary',
             'export' => 'secondary',
+            'email'  => 'primary',
             'login'  => 'dark',
+            'logout' => 'secondary',
             default  => 'light',
         };
     }
@@ -68,7 +70,9 @@ class ActivityLog extends Model
             'search' => 'bi-search',
             'import' => 'bi-upload',
             'export' => 'bi-download',
+            'email'  => 'bi-envelope',
             'login'  => 'bi-box-arrow-in-right',
+            'logout' => 'bi-box-arrow-left',
             default  => 'bi-activity',
         };
     }
